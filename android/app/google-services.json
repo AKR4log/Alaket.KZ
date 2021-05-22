@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "815854215079",
+    "project_id": "alaket-8eccf",
+    "storage_bucket": "alaket-8eccf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815854215079:android:9473f427e678af57786082",
+        "android_client_info": {
+          "package_name": "ru.barnlab.alaket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "815854215079-hdj5grfqkfne5ichl1rsk6dsia3eu25o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj32545cGZbGVP8gLtplhDBRkM3LcBSmc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "815854215079-hdj5grfqkfne5ichl1rsk6dsia3eu25o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
