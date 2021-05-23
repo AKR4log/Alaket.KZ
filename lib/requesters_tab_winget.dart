@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:alaket_ios/all_task.dart';
 import 'package:alaket_ios/complite.dart';
+import 'package:alaket_ios/pages/loging/loging.dart';
 import 'package:alaket_ios/search_page.dart';
 import 'package:alaket_ios/utils/widgets/model_windows.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -146,109 +147,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       });
       uploadImageToFirebase(_context);
     } else {
-      modelBlock(context, [
-        TextField(
-          controller: controllerPhone,
-          decoration: const InputDecoration(
-            hintText: "ТЕЛЕФОН",
-          ),
-          style: TextStyle(
-            fontSize: 14.0,
-          ),
-        ),
-        TextButton(
-            onPressed: () async {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Ожидается код подтверждения'),
-                ),
-              );
-              final PhoneVerificationCompleted verificationCompleted =
-                  (AuthCredential authResult) async {
-                UserCredential firebaseResult = await FirebaseAuth.instance
-                    .signInWithCredential(authResult);
-                var uid = FirebaseAuth.instance.currentUser.uid;
-                if (firebaseResult.additionalUserInfo.isNewUser) {
-                  CollectionReference refU =
-                      FirebaseFirestore.instance.collection("users");
-                  refU.doc(uid).set({
-                    "uidUser": uid,
-                    "phone": FirebaseAuth.instance.currentUser.phoneNumber,
-                    "status": false,
-                    "name": '',
-                    "pushToken": null,
-                    "surname": '',
-                    "avatars": '',
-                    "timeCreated": DateTime.now().toUtc().toString(),
-                  });
-                  Navigator.pop(context);
-                }
-                Navigator.pop(context);
-              };
-
-              final PhoneVerificationFailed verificationFailed =
-                  (FirebaseAuthException authException) {
-                print(authException.code);
-              };
-
-              final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
-                this.verificationID = verId;
-              };
-
-              final PhoneCodeAutoRetrievalTimeout autoRetrievalTimeout =
-                  (String verId) {
-                this.verificationID = verId;
-                modelBlock(context, [
-                  TextField(
-                    controller: controllerCode,
-                    decoration: const InputDecoration(
-                      hintText: "Введите код",
-                    ),
-                    style: TextStyle(
-                      fontSize: 14.0,
-                    ),
-                  ),
-                  TextButton(
-                      onPressed: () async {
-                        AuthCredential authCredential =
-                            PhoneAuthProvider.credential(
-                                verificationId: verificationID,
-                                smsCode: controllerCode.text.trim());
-                        UserCredential firebaseResult = await FirebaseAuth
-                            .instance
-                            .signInWithCredential(authCredential);
-                        var uid = FirebaseAuth.instance.currentUser.uid;
-                        if (firebaseResult.additionalUserInfo.isNewUser) {
-                          CollectionReference refU =
-                              FirebaseFirestore.instance.collection("users");
-                          refU.doc(uid).set({
-                            "uidUser": uid,
-                            "phone":
-                                FirebaseAuth.instance.currentUser.phoneNumber,
-                            "status": false,
-                            "name": '',
-                            "pushToken": null,
-                            "surname": '',
-                            "avatars": '',
-                            "timeCreated": DateTime.now().toUtc().toString(),
-                          });
-                          Navigator.pop(context);
-                        }
-                        Navigator.pop(context);
-                      },
-                      child: Text('Авторизоваться')),
-                ]);
-              };
-              await FirebaseAuth.instance.verifyPhoneNumber(
-                  phoneNumber: controllerPhone.text.trim(),
-                  verificationCompleted: verificationCompleted,
-                  timeout: const Duration(seconds: 5),
-                  verificationFailed: verificationFailed,
-                  codeSent: smsSent,
-                  codeAutoRetrievalTimeout: autoRetrievalTimeout);
-            },
-            child: Text('Авторизоваться')),
-      ]);
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => LoginPage()));
     }
   }
 
@@ -984,118 +884,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             // FirebaseAuth.instance.signOut();
             // return;
           } else {
-            modelBlock(context, [
-              Material(
-                child: TextField(
-                  controller: controllerPhone,
-                  decoration: const InputDecoration(
-                    hintText: "ТЕЛЕФОН",
-                  ),
-                  style: TextStyle(
-                    fontSize: 14.0,
-                  ),
-                ),
-              ),
-              TextButton(
-                  onPressed: () async {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Ожидается код подтверждения'),
-                      ),
-                    );
-                    final PhoneVerificationCompleted verificationCompleted =
-                        (AuthCredential authResult) async {
-                      UserCredential firebaseResult = await FirebaseAuth
-                          .instance
-                          .signInWithCredential(authResult);
-                      var uid = FirebaseAuth.instance.currentUser.uid;
-                      if (firebaseResult.additionalUserInfo.isNewUser) {
-                        CollectionReference refU =
-                            FirebaseFirestore.instance.collection("users");
-                        refU.doc(uid).set({
-                          "uidUser": uid,
-                          "phone":
-                              FirebaseAuth.instance.currentUser.phoneNumber,
-                          "name": '',
-                          "surname": '',
-                          "avatars": '',
-                          "pushToken": null,
-                          "status": false,
-                          "timeCreated": DateTime.now().toUtc().toString(),
-                        });
-                        Navigator.pop(context);
-                      }
-                      Navigator.pop(context);
-                    };
-
-                    final PhoneVerificationFailed verificationFailed =
-                        (FirebaseAuthException authException) {
-                      print(authException.code);
-                    };
-
-                    final PhoneCodeSent smsSent =
-                        (String verId, [int forceResend]) {
-                      this.verificationID = verId;
-                    };
-
-                    final PhoneCodeAutoRetrievalTimeout autoRetrievalTimeout =
-                        (String verId) {
-                      this.verificationID = verId;
-                      modelBlock(context, [
-                        Material(
-                          child: TextField(
-                            controller: controllerCode,
-                            decoration: const InputDecoration(
-                              hintText: "Введите код",
-                            ),
-                            style: TextStyle(
-                              fontSize: 14.0,
-                            ),
-                          ),
-                        ),
-                        TextButton(
-                            onPressed: () async {
-                              AuthCredential authCredential =
-                                  PhoneAuthProvider.credential(
-                                      verificationId: verificationID,
-                                      smsCode: controllerCode.text.trim());
-                              UserCredential firebaseResult = await FirebaseAuth
-                                  .instance
-                                  .signInWithCredential(authCredential);
-                              var uid = FirebaseAuth.instance.currentUser.uid;
-                              if (firebaseResult.additionalUserInfo.isNewUser) {
-                                CollectionReference refU = FirebaseFirestore
-                                    .instance
-                                    .collection("users");
-                                refU.doc(uid).set({
-                                  "uidUser": uid,
-                                  "phone": FirebaseAuth
-                                      .instance.currentUser.phoneNumber,
-                                  "name": '',
-                                  "pushToken": null,
-                                  "surname": '',
-                                  "avatars": '',
-                                  "status": false,
-                                  "timeCreated":
-                                      DateTime.now().toUtc().toString(),
-                                });
-                              }
-                              Navigator.pop(context);
-                            },
-                            child: Text('Авторизоваться')),
-                      ]);
-                    };
-                    await FirebaseAuth.instance.verifyPhoneNumber(
-                        phoneNumber: controllerPhone.text.trim(),
-                        verificationCompleted: verificationCompleted,
-                        timeout: const Duration(seconds: 5),
-                        verificationFailed: verificationFailed,
-                        codeSent: smsSent,
-                        codeAutoRetrievalTimeout: autoRetrievalTimeout);
-                    Navigator.pop(context);
-                  },
-                  child: Text('Авторизоваться')),
-            ]);
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => LoginPage()));
           }
         },
         highlightColor: Colors.deepOrange,

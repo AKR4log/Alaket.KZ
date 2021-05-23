@@ -41,7 +41,7 @@ Widget modelBlock(context, List<Widget> widgets) {
               width: double.infinity,
               margin: EdgeInsets.symmetric(
                   horizontal: 25,
-                  vertical: MediaQuery.of(context).size.width * 0.85),
+                  vertical: MediaQuery.of(context).size.width * 0.75),
               padding: EdgeInsets.all(15),
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15), color: Colors.white),

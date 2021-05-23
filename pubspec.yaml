@@ -51,6 +51,7 @@ dependencies:
   flutter_local_notifications:
   provider: ^4.3.2+3
   autocomplete_textfield: ^1.7.3
+  flutter_multi_formatter:
 
 
 dev_dependencies:
