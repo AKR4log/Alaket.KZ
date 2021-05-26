@@ -129,6 +129,10 @@ class _LoginPageState extends State<LoginPage> {
 
     final PhoneCodeSent smsSent = (String verId, [int forceResend]) {
       this.verificationID = verId;
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => ConfirmCode(
+                verificationID: verId,
+              )));
       setState(() {
         error = false;
         waiting = true;
@@ -137,10 +141,6 @@ class _LoginPageState extends State<LoginPage> {
 
     final PhoneCodeAutoRetrievalTimeout autoRetrievalTimeout = (String verId) {
       this.verificationID = verId;
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ConfirmCode(
-                verificationID: verId,
-              )));
     };
 
     await FirebaseAuth.instance.verifyPhoneNumber(
