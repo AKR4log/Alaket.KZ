@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
 import 'dart:ui' as ui;
 import 'package:alaket_ios/all_task.dart';
+import 'package:alaket_ios/chat.dart';
 import 'package:alaket_ios/complite.dart';
+import 'package:alaket_ios/data.dart';
 import 'package:alaket_ios/pages/loging/loging.dart';
 import 'package:alaket_ios/search_page.dart';
 import 'package:alaket_ios/utils/widgets/model_windows.dart';
@@ -14,6 +17,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 // import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -23,13 +27,15 @@ import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:google_maps_webservice/places.dart' as places;
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:uuid/uuid.dart';
 
 const kGoogleApiKey = "AIzaSyBufel5iX9GaTH_P4XVv7A9P1tL88PBbaw";
 
 class HomePage extends StatefulWidget {
   final String vehicle_type;
-  HomePage({this.vehicle_type});
+  final bool sts;
+  HomePage({this.vehicle_type, this.sts});
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -39,6 +45,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
   double _lat = 0;
   double _lng = 0;
+  double _latCntr = 0;
+  double _lngCntr = 0;
   Completer<GoogleMapController> _controller = Completer();
   Location location = new Location();
   bool _serviceEnabled = false;
@@ -55,6 +63,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   PermissionStatus _permissionGranted;
   CameraPosition _currentPosition;
   String _address = "Где искать исполнителя";
+  String cntrlAdress;
   String how_service_search = "Какую технику ищете?";
   Geolocator _geolocator = Geolocator();
   Set<Marker> _markers = {};
@@ -133,9 +142,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     //     )
     // );
     getBytesFromAsset();
-    rootBundle.loadString('assets/json_values/style_map.txt').then((string) {
-      _mapStyle = string;
-    });
+    // rootBundle.loadString('assets/json_values/style_map.txt').then((string) {
+    //   _mapStyle = string;
+    // });
   }
 
   Future pickImage() async {
@@ -242,17 +251,133 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  Future<void> openMap(double latitude, double longitude) async {
+    String googleUrl =
+        'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+    if (await canLaunch(googleUrl)) {
+      await launch(googleUrl);
+    } else {
+      throw 'Could not open the map.';
+    }
+  }
+
+  createPush(body, uid) async {
+    var bodys = {
+      'notification': {
+        'body': 'Ваша заяка принята подрядчиком',
+        'title': 'Ваш заказ принят'
+      },
+      'priority': 'high',
+      'data': {
+        'clickaction': 'FLUTTERNOTIFICATIONCLICK',
+        'id': '1',
+        'status': 'done'
+      },
+      'to': '/topics/alaket-$uid'
+    };
+    print(jsonEncode(bodys));
+    await http.post('https://fcm.googleapis.com/fcm/send',
+        body: jsonEncode(bodys),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization':
+              'key=AAAAvfSzX6c:APA91bF8VFTWSPk4V7w59tYe_-AyY1_f6Hw-rI_C_VYRpO1DBPEqz1DSVH4iNBPcqRGXWhMMMeacC3afotfbu5LLUbRGl4HMAfo5WTQ1g-wVZ86e9FzOIHoPnP4cUoAByEn05aCnEl3a',
+        }).then((response) {
+      if (response.statusCode == 201) {
+        print(response.body);
+      } else {
+        throw Exception('Failed auth');
+      }
+    });
+  }
+
+  getChatRoomIdByUsernames(String a, String b) {
+    if (a.substring(0, 1).codeUnitAt(0) > b.substring(0, 1).codeUnitAt(0)) {
+      return "$b\_$a";
+    } else {
+      return "$a\_$b";
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (FirebaseAuth.instance.currentUser != null && status) {
+    if (widget.sts != false) {
       final task = Provider.of<List<Tasks>>(context);
       task.forEach((doc) {
-        _markers.add(Marker(
-            markerId: MarkerId(doc.uidTask),
-            position: LatLng(doc.lat, doc.lng),
-            icon: BitmapDescriptor.defaultMarker));
+        _markers.add(
+          Marker(
+              onTap: () {
+                modelMain(context, [
+                  TextButton(
+                      onPressed: () {
+                        var uidContract = Uuid().v4();
+                        FirebaseFirestore.instance
+                            .collection("tasks")
+                            .doc(doc.uidTask)
+                            .collection('contractors')
+                            .doc(uidContract)
+                            .set({
+                          "uidUserContractor":
+                              FirebaseAuth.instance.currentUser.uid,
+                          "uidContract": uidContract
+                        });
+                        FirebaseFirestore.instance
+                            .collection("users")
+                            .doc(
+                              FirebaseAuth.instance.currentUser.uid,
+                            )
+                            .collection('contract')
+                            .doc(uidContract)
+                            .set({
+                          "uidUserContractor":
+                              FirebaseAuth.instance.currentUser.uid,
+                          "uidContract": uidContract,
+                          "uidTask": doc.uidTask
+                        });
+                        FirebaseFirestore.instance
+                            .collection("tasks")
+                            .doc(doc.uidTask)
+                            .update({"statusConfirm": true});
+                        createPush('Ваш заказ принят', doc.uidUser);
+                        Navigator.pop(context);
+                      },
+                      child: Text('Принять заказ')),
+                  TextButton(
+                      onPressed: () {
+                        var chatRoomId = getChatRoomIdByUsernames(
+                          FirebaseAuth.instance.currentUser.uid,
+                          doc.uidUser,
+                        );
+                        Map<String, dynamic> chatRoomInfoMap = {
+                          "users": [
+                            FirebaseAuth.instance.currentUser.uid,
+                            doc.uidUser
+                          ]
+                        };
+                        DatabaseMethods()
+                            .createChatRoom(chatRoomId, chatRoomInfoMap);
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ChatScreen(
+                                      doc.uidUser,
+                                    )));
+                      },
+                      child: Text('Написать сообщение')),
+                  TextButton(
+                      onPressed: () {
+                        openMap(doc.lat, doc.lng);
+                      },
+                      child: Text('Отследить заказ'))
+                ]);
+              },
+              markerId: MarkerId(doc.uidTask),
+              position: LatLng(doc.lat, doc.lng),
+              icon: BitmapDescriptor.defaultMarker),
+        );
       });
     }
+
     Widget searchService = Container(
       width: double.infinity,
       height: 56,
@@ -316,30 +441,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
-    Widget _staticLocationSearch = Container(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child:
-              Icon(Icons.adjust, size: 24.0, color: Colors.blueGrey.shade700),
-        ),
-      ),
-    );
-
-    Widget _animatedLocationSearch = FadeTransition(
-      opacity: _fadeInFadeOut,
-      child: Container(
-        child: Align(
-          alignment: Alignment.centerRight,
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child:
-                Icon(Icons.adjust, size: 24.0, color: Colors.blueGrey.shade700),
-          ),
-        ),
-      ),
-    );
+    searchNavigate() async {
+      GoogleMapController controller = await _controller.future;
+      Geolocator().placemarkFromAddress(cntrlAdress).then((res) {
+        setState(() {
+          _latCntr = res[0].position.latitude;
+          _lngCntr = res[0].position.longitude;
+        });
+        controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+            target: LatLng(res[0].position.latitude, res[0].position.longitude),
+            zoom: 14.0)));
+        _markers.add(Marker(
+            markerId: MarkerId('my_location'),
+            position:
+                LatLng(res[0].position.latitude, res[0].position.longitude),
+            icon: BitmapDescriptor.fromBytes(iconMarker)));
+        if (!_serviceEnabled) {
+          animation.dispose();
+        }
+      });
+    }
 
     Widget searchAddressContainer = Container(
       width: double.infinity,
@@ -358,48 +479,43 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ],
           borderRadius: BorderRadius.all(Radius.circular(8))),
-      child: Stack(
-        children: <Widget>[
-          Row(
-            children: [
-              Container(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Icon(Icons.location_on,
-                        size: 18.0, color: Colors.blueGrey.shade700),
-                  ),
-                ),
-              ),
-              Container(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: GestureDetector(
-                      onTap: () {
-                        _handlePressButton();
-                      },
-                      child: Text(
-                        _address,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          GestureDetector(
-            onTap: () {
-              _locateMe();
-            },
-            child: _serviceEnabled
-                ? _staticLocationSearch
-                : _animatedLocationSearch,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        child: TextField(
+          decoration: InputDecoration(
+              hintText: _address,
+              border: InputBorder.none,
+              suffixIcon: IconButton(
+                icon: Icon(Icons.location_on,
+                    size: 18.0, color: Colors.blueGrey.shade700),
+                onPressed: () => searchNavigate(),
+              )),
+          onChanged: (val) async {
+            GoogleMapController controller = await _controller.future;
+            Geolocator().placemarkFromAddress(val).then((res) {
+              setState(() {
+                _latCntr = res[0].position.latitude;
+                _lngCntr = res[0].position.longitude;
+              });
+              controller.animateCamera(CameraUpdate.newCameraPosition(
+                  CameraPosition(
+                      target: LatLng(
+                          res[0].position.latitude, res[0].position.longitude),
+                      zoom: 14.0)));
+              _markers.add(Marker(
+                  markerId: MarkerId('my_location'),
+                  position: LatLng(
+                      res[0].position.latitude, res[0].position.longitude),
+                  icon: BitmapDescriptor.fromBytes(iconMarker)));
+              if (!_serviceEnabled) {
+                animation.dispose();
+              }
+            });
+            setState(() {
+              cntrlAdress = val;
+            });
+          },
+        ),
       ),
     );
 
@@ -413,6 +529,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             Widget>[
           GestureDetector(
             onTap: () => modelBlock(context, [
+              BackButton(
+                color: Colors.black,
+              ),
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -515,6 +634,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           ),
           GestureDetector(
             onTap: () => modelBlock(context, [
+              BackButton(
+                color: Colors.black,
+              ),
               GestureDetector(
                 onTap: () {
                   setState(() {
@@ -613,6 +735,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: InkWell(
             onTap: () {
               modelBlock(context, [
+                BackButton(
+                  color: Colors.black,
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -837,10 +962,23 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ]),
     );
 
+    createCurrentMarker(LatLng position) async {
+      setState(() {
+        _latCntr = position.latitude;
+        _lngCntr = position.longitude;
+        _markers
+            .add(Marker(markerId: MarkerId('my_location'), position: position));
+      });
+    }
+
     Widget mapContainer = Container(
         height: double.infinity,
         width: double.infinity,
         child: GoogleMap(
+          onTap: (position) {
+            createCurrentMarker(position);
+          },
+          mapType: MapType.normal,
           initialCameraPosition: _currentPosition,
           markers: _markers,
           onMapCreated: (GoogleMapController controller) {
@@ -870,8 +1008,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               "type_cash": type_cash,
               "cash": val_cash == 'Бюджет' ? '5000' : val_cash,
               "description": val_description,
-              "lat": _lat,
-              "lng": _lng,
+              "lat": _latCntr != 0 ? _latCntr : _lat,
+              "lng": _lngCntr != 0 ? _lngCntr : _lng,
               "uidTask": uidtask,
               "statusDel": false,
               "time": val_time,
@@ -980,7 +1118,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<Null> setAddressToSearch(double latitude, double longitude) async {
-    final GoogleMapController controller = await _controller.future;
+    GoogleMapController controller = await _controller.future;
 
     final _position = CameraPosition(
       target: LatLng(latitude, longitude),

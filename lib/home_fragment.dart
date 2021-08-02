@@ -41,32 +41,36 @@ class _HomeState extends State<Home> {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
-  List<Widget> tabs = [HomePage(), MyRequestsTab(), ChatTab(), ProfileTab()];
+  List<Widget> tabs = [
+    HomePage(
+      sts: false,
+    ),
+    MyRequestsTab(),
+    ChatTab(),
+    ProfileTab()
+  ];
 
   init() {
     var authUser = FirebaseAuth.instance.currentUser;
     if (authUser != null) {
+      print('init');
       FirebaseFirestore.instance
           .collection('users')
           .doc(FirebaseAuth.instance.currentUser.uid)
           .collection('myTex')
           .get()
           .then((QuerySnapshot querySnapshot) {
+        print('inits');
+        print(querySnapshot.docs.length);
         querySnapshot.docs.forEach((doc) {
           setState(() {
             vehicle_types.add(doc["vehicle_type"]);
           });
           tabs = [
-            vehicle_types.isNotEmpty
-                ? StreamProvider<List<Tasks>>.value(
-                    value:
-                        FeedState(type_tex: vehicle_types).allTaskApplications,
-                    child: HomePage(),
-                  )
-                : StreamProvider<List<Tasks>>.value(
-                    value: FeedState().allMarketApplications,
-                    child: HomePage(),
-                  ),
+            StreamProvider<List<Tasks>>.value(
+              value: FeedState(type_tex: vehicle_types).allTaskApplications,
+              child: HomePage(sts: true),
+            ),
             MyRequestsTab(),
             ChatTab(),
             ProfileTab()

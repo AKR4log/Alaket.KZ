@@ -36,7 +36,9 @@ class _LoginPageState extends State<LoginPage> {
     return Scaffold(
       backgroundColor: Color.fromRGBO(247, 247, 249, 1),
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        leading: BackButton(
+          color: Colors.black,
+        ),
         title: Text(
           'Ваш номер телефона',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w700),

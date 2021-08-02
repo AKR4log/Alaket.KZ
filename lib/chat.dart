@@ -407,10 +407,12 @@ class _ChatScreenState extends State<ChatScreen> {
                               borderRadius: BorderRadius.circular(45)),
                           child: Center(
                             child: Text(
-                              (surname != null || surname[0] != ''
-                                      ? name[0] + surname[0]
-                                      : name[0])
-                                  .toUpperCase(),
+                              name != null && name != ''
+                                  ? (surname != null || surname[0] != ''
+                                          ? name[0] + surname[0]
+                                          : name[0])
+                                      .toUpperCase()
+                                  : widget.chatWithUsername,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 20,

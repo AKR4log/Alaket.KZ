@@ -90,21 +90,33 @@ class _TexnikState extends State<Texnik> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: ListView.builder(
-      itemCount: name.length,
-      itemBuilder: (BuildContext context, int index) {
-        return GestureDetector(
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => HomePage(
-                      vehicle_type: name[index],
-                    )));
-          },
-          child: ListTile(
-            title: Text(name[index]),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          leading: BackButton(
+            color: Colors.black,
           ),
-        );
-      },
-    ));
+          title: Text(
+            'Выберите технику',
+            style: TextStyle(color: Colors.black),
+          ),
+        ),
+        body: ListView.builder(
+          itemCount: name.length,
+          itemBuilder: (BuildContext context, int index) {
+            return GestureDetector(
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (context) => HomePage(
+                          vehicle_type: name[index],
+                          sts: false,
+                        )));
+              },
+              child: ListTile(
+                title: Text(name[index]),
+              ),
+            );
+          },
+        ));
   }
 }

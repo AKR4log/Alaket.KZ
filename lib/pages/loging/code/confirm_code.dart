@@ -12,7 +12,7 @@ class ConfirmCode extends StatefulWidget {
 }
 
 class _ConfirmCodeState extends State<ConfirmCode> {
-  TextEditingController _controllerCodes;
+  TextEditingController _controllerCodes = TextEditingController();
   bool waiting = false;
 
   @override
@@ -48,12 +48,16 @@ class _ConfirmCodeState extends State<ConfirmCode> {
           setState(() {
             waiting = true;
           });
+          print('val 1');
           AuthCredential authCredential = PhoneAuthProvider.credential(
               verificationId: widget.verificationID,
-              smsCode: _controllerCodes.text.trim());
+              smsCode: _controllerCodes.text);
+          print('val 2');
           UserCredential firebaseResult =
               await FirebaseAuth.instance.signInWithCredential(authCredential);
+          print('val 3');
           var uid = FirebaseAuth.instance.currentUser.uid;
+          print('val 4');
           if (firebaseResult.additionalUserInfo.isNewUser) {
             CollectionReference refU =
                 FirebaseFirestore.instance.collection("users");

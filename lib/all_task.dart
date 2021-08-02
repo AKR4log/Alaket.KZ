@@ -27,6 +27,7 @@ class _AllTaskState extends State<AllTask> {
         });
       });
     });
+    print(vehicle_types);
   }
 
   @override
@@ -48,10 +49,16 @@ class _AllTaskState extends State<AllTask> {
             style: TextStyle(color: Colors.black),
           ),
         ),
-        body: StreamProvider<List<Tasks>>.value(
-          value: FeedState(type_tex: vehicle_types).allTaskApplications,
-          child: Listing(),
-        ));
+        body: vehicle_types.isNotEmpty
+            ? StreamProvider<List<Tasks>>.value(
+                value: FeedState(type_tex: vehicle_types).allTaskApplications,
+                child: Listing(),
+              )
+            : Center(
+                child: Text(
+                'Добавьте технику\nЧтобы вы могли видеть заявки на вашу технику',
+                textAlign: TextAlign.center,
+              )));
   }
 }
 

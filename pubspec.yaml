@@ -52,13 +52,15 @@ dependencies:
   provider: ^4.3.2+3
   autocomplete_textfield: ^1.7.3
   flutter_multi_formatter:
+  onboarding: ^2.1.0
+  share: ^2.0.4
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_launcher_icons: "0.8.0"
+  flutter_launcher_icons: ^0.8.0
 
 flutter_icons:
   android: "launcher_icon"

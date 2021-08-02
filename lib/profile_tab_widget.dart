@@ -12,6 +12,7 @@ import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share/share.dart';
 
 class ProfileTab extends StatefulWidget {
   @override
@@ -113,7 +114,7 @@ class MapScreenState extends State<ProfileTab>
         textColor: Colors.white,
         padding: EdgeInsets.fromLTRB(9, 9, 9, 9),
         highlightElevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         colorBrightness: Brightness.light,
       ),
     );
@@ -162,17 +163,43 @@ class MapScreenState extends State<ProfileTab>
           Column(
             children: <Widget>[
               new Container(
-                height: 150.0,
+                height: 128.0,
                 color: Colors.white,
                 child: new Column(
                   children: <Widget>[
                     Padding(
-                      padding: EdgeInsets.all(16.0),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                       child: new Stack(fit: StackFit.loose, children: <Widget>[
                         new Row(
-                          // crossAxisAlignment: CrossAxisAlignment.center,
-                          // mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: <Widget>[
+                            new Expanded(
+                                child: new Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                new Container(
+                                  height: 48.0,
+                                  color: Colors.white,
+                                  child: new Text(
+                                      status ? 'Подрядчик' : 'Заказчик',
+                                      style: TextStyle(fontSize: 30.0)),
+                                ),
+                                new Container(
+                                  height: 48.0,
+                                  color: Colors.white,
+                                  child: new Text(
+                                      FirebaseAuth.instance.currentUser != null
+                                          ? "№" +
+                                              FirebaseAuth
+                                                  .instance.currentUser.uid
+                                          : "№00000000000000000",
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 18.0)),
+                                )
+                              ],
+                            )),
                             GestureDetector(
                               onTap: () async {
                                 if (FirebaseAuth.instance.currentUser != null) {
@@ -260,34 +287,6 @@ class MapScreenState extends State<ProfileTab>
                                 ),
                               ),
                             ),
-                            new Expanded(
-                                child: new Column(
-                              children: [
-                                new Container(
-                                  alignment: Alignment.topLeft,
-                                  padding: EdgeInsets.only(left: 16.0),
-                                  height: 48.0,
-                                  color: Colors.white,
-                                  child: new Text(
-                                      status ? 'Подрядчик' : 'Заказчик',
-                                      style: TextStyle(fontSize: 24.0)),
-                                ),
-                                new Container(
-                                  alignment: Alignment.topLeft,
-                                  padding: EdgeInsets.only(left: 16.0),
-                                  height: 48.0,
-                                  color: Colors.white,
-                                  child: new Text(
-                                      FirebaseAuth.instance.currentUser != null
-                                          ? "№" +
-                                              FirebaseAuth
-                                                  .instance.currentUser.uid
-                                          : "№00000000000000000",
-                                      overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 18.0)),
-                                )
-                              ],
-                            ))
                           ],
                         ),
                       ]),
@@ -708,28 +707,42 @@ class MapScreenState extends State<ProfileTab>
               new Padding(
                 padding: EdgeInsets.only(
                     left: 16.0, right: 16.0, top: 16.0, bottom: 16.0),
-                child: new Container(
-                  height: _height_switch_container,
-                  child: new Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    mainAxisSize: MainAxisSize.max,
-                    children: <Widget>[
-                      new Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          new Text(
-                            'Поделиться ссылкой',
-                            style: TextStyle(fontSize: 16.0),
-                          ),
-                        ],
-                      ),
-                      new Icon(Icons.share,
-                          size: 20.0, color: Colors.blueGrey.shade700)
-                    ],
+                child: GestureDetector(
+                  onTap: () {
+                    Share.share('Смотри, нашёл класное приложение по аренде спецтехники\nhttps://play.google.com/store/apps/details?id=ru.barnlab.alaket');
+                  },
+                  child: new Container(
+                    height: _height_switch_container,
+                    child: new Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        new Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            new Text(
+                              'Поделиться ссылкой',
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                          ],
+                        ),
+                        new Icon(Icons.share,
+                            size: 20.0, color: Colors.blueGrey.shade700)
+                      ],
+                    ),
                   ),
                 ),
-              )
+              ),
+              Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.symmetric(horizontal: 35),
+                  child: Center(
+                    child: TextButton(
+                      onPressed: () => FirebaseAuth.instance.signOut(),
+                      child: Text('Выйти'),
+                    ),
+                  )),
             ],
           ),
         ],

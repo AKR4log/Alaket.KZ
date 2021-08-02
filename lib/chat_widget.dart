@@ -218,10 +218,13 @@ class _ChatRoomListTileState extends State<ChatRoomListTile> {
                                 borderRadius: BorderRadius.circular(45)),
                             child: Center(
                               child: Text(
-                                (surname != null
-                                        ? name[0] + surname[0]
-                                        : name[0])
-                                    .toUpperCase(),
+                                name != null && name != ''
+                                    ? (surname != null
+                                            ? name[0] + surname[0]
+                                            : name[0])
+                                        .toUpperCase()
+                                    : widget.chatRoomId.toString(),
+                                maxLines: 1,
                                 style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 20,
@@ -234,9 +237,17 @@ class _ChatRoomListTileState extends State<ChatRoomListTile> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        surname != null ? name + ' ' + surname : name,
-                        style: TextStyle(fontSize: 16),
+                      Container(
+                        width: 250,
+                        child: Text(
+                          name != null && name != ''
+                              ? surname != null
+                                  ? name + ' ' + surname
+                                  : name
+                              : widget.chatRoomId.toString(),
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
                       Container(
                         child: Row(
